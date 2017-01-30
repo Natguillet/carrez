@@ -6,13 +6,14 @@ var app     = express();
 
 var json = {
  "prix" : 0,
- "ville": 0,
+ "codePostal": 0,
+ "ville":"",
  "type":"",
  "surface":""
 };
 
 app.get('/scrape', function(req,res){
-  url= 'https://www.leboncoin.fr/ventes_immobilieres/1076257949.htm?ca=12_s';
+  url= 'https://www.leboncoin.fr/ventes_immobilieres/1086051198.htm?ca=12_s';
   request(url, function(error, response, html){
     // First we'll check to make sure no errors occurred when making the request
 
@@ -28,11 +29,22 @@ app.get('/scrape', function(req,res){
       })
       $('#adview > section > section > section.properties.lineNegative > div.line.line_city > h2 > span.value').filter(function(){
           var data = $(this);
-        json.ville = data.text().replace(/[^0-9]+/ig,"");
+        json.codePostal = data.text().replace(/[^0-9]+/ig,"");
+        json.ville = data.text().replace(new RegExp("[^(a-zA-Z)\-]", "g"), '');
       })
       $('#adview > section > section > section.properties.lineNegative > div:nth-child(7) > h2 > span.value').filter(function(){
           var data = $(this);
         json.type = data.text();
+        if(json.type === "Oui" || json.type === "Non"){
+          $('#adview > section > section > section > div:nth-child(8) > h2 > span.value').filter(function(){
+              var data = $(this);
+            json.type = data.text();
+          })
+          $('#adview > section > section > section > div:nth-child(10) > h2 > span.value').filter(function(){
+              var data = $(this);
+            json.surface = data.text().replace(/[^0-9]+/ig,"").slice(0,json.surface.length-1);
+          })
+        }
       })
     }
     fs.writeFile('output.json',JSON.stringify(json,null,4), function(err){
