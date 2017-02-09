@@ -1,3 +1,5 @@
+var cheerio = require('cheerio');
+var fs = require('fs');
 var info = {
   "prixsquare":0,
   "prixbas":0,
@@ -7,18 +9,16 @@ var info = {
 };
 
 
-var priceSquareMeter = function(fs){
-  var data = JSON.parse(fs.readFileSync("output.json","UTF-8"));
-  var url= 'https://www.meilleursagents.com/prix-immobilier/'+ data.ville.toLowerCase() + '-'+data.codePostal;
+var priceSquareMeter = function(json,request,callback){
+  var url= 'https://www.meilleursagents.com/prix-immobilier/'+ json.ville.toLowerCase() + '-'+json.codePostal;
   request(url, function(error, response, html){
     if(!error){
       var $ = cheerio.load(html);
       $('#synthese > div.prices-summary.baseline > div.prices-summary__values > div.row.medium-uncollapse.baseline--half > div.small-12.medium-6.columns.prices-summary__cell--row-header').filter(function(){
         var price = $(this);
         info.type = price.text();
-        console.log(info.type.includes("maison"));
       })
-      if(data.type === "Maison"){
+      if(json.type === "Maison"){
         if (info.type.includes("maison")) {
           $('#synthese > div.prices-summary.baseline > div.prices-summary__values > div.row.medium-uncollapse.baseline--half > div.small-4.medium-2.columns.prices-summary__cell--median').filter(function(){
             var price = $(this);
@@ -47,7 +47,7 @@ var priceSquareMeter = function(fs){
           })
         }
       }
-      else if(data.type ==="Appartement"){
+      else if(json.type ==="Appartement"){
         $('#synthese > div.prices-summary.baseline > div.prices-summary__values > div:nth-child(2) > div.small-4.medium-2.columns.prices-summary__cell--median').filter(function(){
           var price = $(this);
           info.prixmoyen = price.text().replace(/[^0-9]+/ig,"");
@@ -62,19 +62,16 @@ var priceSquareMeter = function(fs){
         })
       }
     }
-    info.prixsquare = data.prix / data.surface ;
+    info.prixsquare = json.prix / json.surface ;
     console.log(info.prixsquare);
     console.log(info.prixmoyen);
+    if(info.prixsquare > info.prixmoyen){
+      console.log("Mauvais deal");
+    } else {
+      console.log("Good deal");
+    }
   });
+  callback(info);
 }
 
-var isGoodDeal = function(){
-  if(info.prixsquare > info.prixmoyen){
-    console.log("Mauvais deal");
-  } else {
-    console.log("Good deal");
-  }
-}
-
-exports.isGoodDeal = isGoodDeal;
-esports.priceSquareMeter = priceSquareMeter;
+exports.priceSquareMeter = priceSquareMeter;

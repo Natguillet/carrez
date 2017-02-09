@@ -1,3 +1,5 @@
+var cheerio = require('cheerio');
+var fs = require('fs');
 var json = {
   "prix" : 0,
   "codePostal": 0,
@@ -5,8 +7,9 @@ var json = {
   "type":"",
   "surface":""
 };
+var regAccentE = new RegExp('[éèêë]', 'gi');
 
-var readLeboncoin = function(fs,url){
+var readLeboncoin = function(url,request,callback){
   request(url, function(error, response, html){
     // First we'll check to make sure no errors occurred when making the request
 
@@ -23,7 +26,7 @@ var readLeboncoin = function(fs,url){
       $('#adview > section > section > section.properties.lineNegative > div.line.line_city > h2 > span.value').filter(function(){
         var data = $(this);
         json.codePostal = data.text().replace(/[^0-9]+/ig,"");
-        json.ville = data.text().replace(new RegExp("[^(a-zA-Z)\-]", "g"), '');
+        json.ville = data.text().replace(new RegExp("[^a-zA-Z\-]", "g"), '');
       })
       $('#adview > section > section > section.properties.lineNegative > div:nth-child(7) > h2 > span.value').filter(function(){
         var data = $(this);
@@ -40,10 +43,8 @@ var readLeboncoin = function(fs,url){
         }
       })
     }
-    fs.writeFile('output.json',JSON.stringify(json,null,4), function(err){
-      console.log('File successfully written! - Check your project directory for the output.json file');
-
-    })
+    console.log(json);
+    callback(json);
   });
 }
 exports.readLeboncoin = readLeboncoin;
