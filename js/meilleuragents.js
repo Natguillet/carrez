@@ -63,15 +63,13 @@ var priceSquareMeter = function(json,request,callback){
       }
     }
     info.prixsquare = json.prix / json.surface ;
-    console.log(info.prixsquare);
-    console.log(info.prixmoyen);
     if(info.prixsquare > info.prixmoyen){
-      console.log("Mauvais deal");
+      info.type="Bad deal";
     } else {
-      console.log("Good deal");
+      info.type="Good deal";
     }
+      callback && callback(info);
   });
-  callback(info);
 }
 
 exports.priceSquareMeter = priceSquareMeter;
